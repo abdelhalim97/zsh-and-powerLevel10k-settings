@@ -92,6 +92,12 @@ source $ZSH/oh-my-zsh.sh
 
 # export MANPATH="/usr/local/man:$MANPATH"
 
+# exports related to nnn
+export NNN_FIFO=/tmp/nnn.fifo
+export NNN_PLUG='p:preview-tui;v:imgview'
+# - show hidden files by default
+export NNN_OPTS="H"
+
 # You may need to manually set your language environment
 # export LANG=en_US.UTF-8
 
@@ -117,6 +123,13 @@ source $ZSH/oh-my-zsh.sh
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 
+# nn will run nnn and will cd into the directory open exit
+nn() {
+    export NNN_TMPFILE="${XDG_CONFIG_HOME:-$HOME/.config}/nnn/.lastd"
+    nnn "$@"
+    [ ! -f "$NNN_TMPFILE" ] || { . "$NNN_TMPFILE"; rm -f -- "$NNN_TMPFILE"; }
+}
+
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 source /home/abdelhalim/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
@@ -125,3 +138,17 @@ export PATH="$HOME/bin:$PATH"
 export ASDF_DATA_DIR="$HOME/.asdf"
 export PATH="$ASDF_DATA_DIR/shims:$PATH"
 export PATH="$HOME/.local/bin:$PATH"
+
+# --- Auto-launch tmux for the evercam project in VS Code ---
+if [[ "$TERM_PROGRAM" == "vscode" && -z "$TMUX" && "$PWD" == /home/abdelhalim/Desktop/ever/evercam-backend* ]]; then
+  SESH="evercam"
+  DIR="/home/abdelhalim/Desktop/ever/evercam-backend/evercam_api"
+
+  if ! tmux has-session -t "$SESH" 2>/dev/null; then
+    tmux new-session  -d -s "$SESH" -c "$DIR"
+    tmux split-window -h -t "$SESH" -c "$DIR"
+  fi
+
+  exec tmux attach -t "$SESH"
+fi
+
