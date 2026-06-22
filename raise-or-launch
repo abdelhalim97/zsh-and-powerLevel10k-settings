@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# Usage: raise-or-launch <class_pattern> <command...>
+# Focuses a matching window; cycles through them on repeat presses; launches if none exist.
+class="$1"; shift
+
+mapfile -t wins < <(xdotool search --onlyvisible --class "$class" 2>/dev/null)
+
+if [ ${#wins[@]} -eq 0 ]; then
+  setsid "$@" >/dev/null 2>&1 &     # nothing open -> launch
+  exit 0
+fi
+
+active=$(xdotool getactivewindow 2>/dev/null)
+
+# is the currently focused window one of ours? if so, jump to the next one
+idx=-1
+for i in "${!wins[@]}"; do
+  [ "${wins[$i]}" = "$active" ] && { idx=$i; break; }
+done
+if [ "$idx" -ge 0 ]; then
+  next=$(( (idx + 1) % ${#wins[@]} ))
+else
+  next=0
+fi
+
+xdotool windowactivate "${wins[$next]}"
